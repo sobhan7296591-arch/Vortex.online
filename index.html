@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VORTEX Sens</title>
+<style>
+body{background:#0b0b0f;color:#fff;font-family:tahoma;padding:20px;text-align:center}
+.title{font-size:32px;font-weight:bold;color:#ff5722;text-shadow:0 0 15px #ff5722;margin-bottom:6px}
+.sub{font-size:12px;color:#ffb199;margin-bottom:10px}
+.box{background:#151525;padding:12px;border-radius:12px;margin:10px 0}
+input,select,button{width:100%;padding:10px;border-radius:8px;border:none;margin-top:8px}
+button{background:#00c2ff;color:#000;font-weight:bold}
+.result{background:#000;padding:12px;border-radius:10px;margin-top:12px;text-align:right}
+.footer{margin-top:20px;color:#aaa;font-size:12px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div id="loginPage">
+  <div class="title">VORTEX 🔥</div>
+  <div class="box">کاربر گرامی لطفاً رمز را وارد کنید:</div>
+  <input id="loginCode" placeholder="رمز عبور">
+  <button onclick="checkCode()">ورود</button>
+</div>
+
+<div id="mainPage" class="hidden">
+  <div class="title">VORTEX 🔥</div>
+  <div id="expireInfo" class="sub"></div>
+
+  <div class="box"><input id="phone" placeholder="اسم گوشی شما"></div>
+
+  <div class="box">
+    <select id="type">
+      <option>سنس یوتیوبری</option>
+      <option>سنس VIP</option>
+      <option>سنس برزیلی</option>
+      <option>سنس عادی</option>
+    </select>
+  </div>
+
+  <div class="box">
+    <select id="country">
+      <option>🇮🇷 ایران</option>
+      <option>🇩🇪 آلمان</option>
+      <option>🇺🇸 آمریکا</option>
+      <option>🇯🇵 ژاپن</option>
+      <option>🇧🇷 برزیل</option>
+      <option>🇦🇪 امارات</option>
+    </select>
+  </div>
+
+  <div class="box">
+    <select id="server">
+      <option>خاورمیانه</option>
+      <option>اروپا</option>
+      <option>هند</option>
+    </select>
+  </div>
+
+  <button onclick="generate()">تولید سنس</button>
+  <div id="output" class="result" style="display:none;"></div>
+
+  <div class="footer">Powered BY VORTEX</div>
+</div>
+
+<script>
+function rand(){ return Math.floor(Math.random()*200)+1; }
+
+let active=null, timer=null;
+
+function formatRemain(ms){
+  if(ms<=0) return "منقضی شده";
+  const s=Math.floor(ms/1000)%60;
+  const m=Math.floor(ms/60000)%60;
+  const h=Math.floor(ms/3600000)%24;
+  const d=Math.floor(ms/86400000);
+  return `${d} روز / ${h} ساعت / ${m} دقیقه / ${s} ثانیه`;
+}
+
+function checkCode(){
+  const codeInput=document.getElementById("loginCode").value.trim();
+  let codes=JSON.parse(localStorage.getItem("vortex_codes")||"[]");
+  const now=Date.now();
+  const found=codes.find(c=>c.code===codeInput);
+
+  if(!found){ alert("رمز اشتباه است ❌"); return; }
+  if(found.expire!==0 && now>found.expire){ alert("اعتبار رمز تمام شده ⛔"); return; }
+  if(found.used>=found.users){ alert("ظرفیت این رمز پر شده ⛔"); return; }
+
+  found.used+=1;
+  localStorage.setItem("vortex_codes",JSON.stringify(codes));
+  active=found;
+
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("mainPage").classList.remove("hidden");
+
+  updateExpire();
+  timer=setInterval(updateExpire,1000);
+}
+
+function updateExpire(){
+  if(!active) return;
+  const now=Date.now();
+  const remain = active.expire===0 ? "دائمی" : formatRemain(active.expire-now);
+  document.getElementById("expireInfo").innerText = "تاریخ انقضا رمز شما: " + remain;
+}
+
+function generate(){
+  const phone=document.getElementById("phone").value;
+  const type=document.getElementById("type").value;
+  const country=document.getElementById("country").value;
+  const server=document.getElementById("server").value;
+
+  const out = document.getElementById("output");
+  out.style.display="block";
+  out.innerHTML = `
+اسم گوشی شما: ${phone}<br>
+نوع سنس: ${type}<br>
+کشور: ${country}<br>
+سرور: ${server}<br><br>
+General: ${rand()}<br>
+Red dot: ${rand()}<br>
+2x Scope: ${rand()}<br>
+4x Scope: ${rand()}<br>
+Awm Scope: ${rand()}<br>
+Free look: ${rand()}
+`;
+}
+</script>
+
+</body>
+</html>
