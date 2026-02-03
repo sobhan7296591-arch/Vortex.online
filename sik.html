@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="fa">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VORTEX</title>
+<style>
+body{margin:0;background:#0b1220;color:#fff;font-family:system-ui}
+.page{min-height:100vh;padding:14px;box-sizing:border-box}
+.card{background:#121a2b;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+h2{margin:8px 0 12px;text-align:center}
+input,select,button{width:100%;padding:12px;margin:8px 0;border-radius:10px;border:none;font-size:16px}
+button{background:linear-gradient(135deg,#ff8a00,#ff3d00);color:#000;font-weight:800}
+pre{white-space:pre-wrap;word-break:break-word;background:#0a1020;padding:12px;border-radius:10px}
+.footer{text-align:center;opacity:.7;margin-top:10px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div id="loginPage" class="page">
+  <div class="card">
+    <h2>VORTEX 🔥</h2>
+    <p>کاربر گرامی لطفا رمز عبور را وارد کنید:</p>
+    <input id="pass" placeholder="رمز عبور">
+    <button onclick="checkPass()">ورود</button>
+    <pre id="loginMsg"></pre>
+  </div>
+</div>
+
+<div id="genPage" class="page hidden">
+  <div class="card">
+    <h2>تولید سنس</h2>
+
+    <label>اسم گوشی شما:</label>
+    <input id="phone">
+
+    <label>نوع سنس:</label>
+    <select id="type">
+      <option>VIP</option>
+      <option>سنس یوتیوبری</option>
+      <option>سنس برزیلی</option>
+      <option>سنس عادی</option>
+    </select>
+
+    <label>کشور:</label>
+    <select id="country">
+      <option>ایران 🇮🇷</option>
+      <option>آلمان 🇩🇪</option>
+      <option>آمریکا 🇺🇸</option>
+      <option>ژاپن 🇯🇵</option>
+      <option>برزیل 🇧🇷</option>
+      <option>امارات 🇦🇪</option>
+    </select>
+
+    <label>سرور:</label>
+    <select id="server">
+      <option>خاورمیانه</option>
+      <option>اروپا</option>
+      <option>هند</option>
+    </select>
+
+    <button onclick="generate()">تولید سنس</button>
+
+    <pre id="result"></pre>
+    <div id="expireText"></div>
+    <div class="footer">Powered BY VORTEX</div>
+  </div>
+</div>
+
+<script>
+const CODES=[
+ // 1 ساعت
+ {code:"VRX-1H-4831",d:3600000},{code:"VRX-1H-9472",d:3600000},{code:"VRX-1H-2059",d:3600000},{code:"VRX-1H-7814",d:3600000},{code:"VRX-1H-6390",d:3600000},
+ // 1 روز
+ {code:"VRX-1D-1147",d:86400000},{code:"VRX-1D-6629",d:86400000},{code:"VRX-1D-8301",d:86400000},{code:"VRX-1D-4095",d:86400000},{code:"VRX-1D-9752",d:86400000},
+ // 7 روز
+ {code:"VRX-7D-5521",d:7*86400000},{code:"VRX-7D-7810",d:7*86400000},{code:"VRX-7D-3906",d:7*86400000},{code:"VRX-7D-2248",d:7*86400000},{code:"VRX-7D-9684",d:7*86400000},
+ // 1 ماه
+ {code:"VRX-1M-1048",d:30*86400000},{code:"VRX-1M-6923",d:30*86400000},{code:"VRX-1M-4301",d:30*86400000},{code:"VRX-1M-8890",d:30*86400000},{code:"VRX-1M-2756",d:30*86400000},
+ // 2 ماه
+ {code:"VRX-2M-7712",d:60*86400000},{code:"VRX-2M-3304",d:60*86400000},{code:"VRX-2M-9041",d:60*86400000},{code:"VRX-2M-6185",d:60*86400000},{code:"VRX-2M-5469",d:60*86400000},
+ // دائمی
+ {code:"VRX-VIP-8842",d:Infinity},{code:"VRX-VIP-1209",d:Infinity},{code:"VRX-VIP-7710",d:Infinity},{code:"VRX-VIP-3901",d:Infinity},{code:"VRX-VIP-6624",d:Infinity},
+];
+
+let currentItem=null, currentStart=null;
+
+function checkPass(){
+  const p=pass.value.trim();
+  const item=CODES.find(x=>x.code===p);
+  if(!item){loginMsg.textContent="❌ رمز اشتباه است"; return;}
+  const key="vortex_"+p;
+  let data=JSON.parse(localStorage.getItem(key)||"null");
+  if(!data){data={start:Date.now()}; localStorage.setItem(key,JSON.stringify(data));}
+  if(item.d!==Infinity && Date.now()>data.start+item.d){loginMsg.textContent="⛔ اعتبار رمز به پایان رسیده"; return;}
+  currentItem=item; currentStart=data.start;
+  loginPage.classList.add("hidden"); genPage.classList.remove("hidden"); showExpire();
+}
+
+function showExpire(){
+  if(currentItem.d===Infinity){expireText.textContent="تاریخ انقضا رمز شما: دائمی"; return;}
+  const tick=()=>{
+    const remain=(currentStart+currentItem.d)-Date.now();
+    if(remain<=0){expireText.textContent="⛔ اعتبار رمز به پایان رسید"; return;}
+    const d=Math.floor(remain/86400000), h=Math.floor((remain%86400000)/3600000),
+          m=Math.floor((remain%3600000)/60000), s=Math.floor((remain%60000)/1000);
+    expireText.textContent=`تاریخ انقضا رمز شما: ${d}روز / ${h}ساعت / ${m}دقیقه / ${s}ثانیه`;
+    setTimeout(tick,1000);
+  }; tick();
+}
+
+function generate(){
+  const set=new Set(); while(set.size<5) set.add(Math.floor(Math.random()*200)+1);
+  const [rd,x2,x4,awm,fl]=[...set];
+  result.textContent=
+`اسم گوشی شما: ${phone.value||"-"}
+نوع سنس: ${type.value}
+کشور: ${country.value}
+سرور: ${server.value}
+
+Red Dot: ${rd}
+2x Scope: ${x2}
+4x Scope: ${x4}
+Awm Scope: ${awm}
+Free look: ${fl}`;
+}
+</script>
+</body>
+</html>
